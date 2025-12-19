@@ -1,2 +1,6 @@
-timestamp,first_name,last_name,jersey_number,outcome,rbis
-2025-11-19T21:14:31,Evan,Pollack,10,Strikeout Looking,0
+timestamp,first_name,last_name,jersey_number,outcome,rbis,game_date,opponent,inning,half
+2025-11-19T21:14:31,Evan,Pollack,10,Strikeout Looking,0,,,,
+2025-12-19T18:02:52,John,Gannon,0,Strikeout,0,2025-12-19,Playa Bowls,1.0,Top
+2025-12-19T18:02:54,John,Gannon,0,Strikeout,0,2025-12-19,Playa Bowls,1.0,Top
+2025-12-19T18:02:54,John,Gannon,0,Strikeout,0,2025-12-19,Playa Bowls,1.0,Top
+2025-12-19T18:05:40,Austin,Celiberti,0,Single,0,2025-12-19,Unknown Opponent,1.0,Top
