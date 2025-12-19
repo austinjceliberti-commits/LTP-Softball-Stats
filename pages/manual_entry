@@ -1,0 +1,13 @@
+import streamlit as st
+
+st.set_page_config(
+    page_title="Manual Stat Entry",
+    page_icon="✏️",
+    layout="wide"
+)
+
+st.title("Manual Stat Entry")
+
+st.info("Use this page to manually correct or adjust stats that were entered incorrectly.")
+
+st.write("🚧 Manual stat editing tools coming soon...")
