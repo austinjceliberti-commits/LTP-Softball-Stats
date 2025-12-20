@@ -4,3 +4,18 @@ timestamp,first_name,last_name,jersey_number,outcome,rbis,game_date,opponent,inn
 2025-12-19T18:02:54,John,Gannon,0,Strikeout,0,2025-12-19,Playa Bowls,1.0,Top
 2025-12-19T18:02:54,John,Gannon,0,Strikeout,0,2025-12-19,Playa Bowls,1.0,Top
 2025-12-19T18:05:40,Austin,Celiberti,0,Single,0,2025-12-19,Unknown Opponent,1.0,Top
+2025-12-20T11:06:23,Austin,Celiberti,0,Double,0,2025-12-20,Paya Bowls ,2.0,Top
+2025-12-20T11:06:35,Ryan,Gannon,7,Single,0,2025-12-20,Paya Bowls ,2.0,Top
+2025-12-20T11:06:51,John,Gannon,0,Home Run,3,2025-12-20,Paya Bowls ,2.0,Top
+2025-12-20T11:07:00,Robert,Smith,7,Walk,0,2025-12-20,Paya Bowls ,2.0,Top
+2025-12-20T11:07:04,Zac,Lavigna,18,Double Play,0,2025-12-20,Paya Bowls ,2.0,Top
+2025-12-20T11:07:12,Ryan,Cole,14,Out,0,2025-12-20,Paya Bowls ,2.0,Top
+2025-12-20T11:08:03,Austin,Celiberti,0,Single,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:08:04,Ryan,Gannon,7,Single,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:08:05,John,Gannon,0,Single,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:08:09,Robert,Smith,7,Double,2,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:18:13,Austin,Celiberti,0,Double,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:18:58,John,Gannon,0,Single,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:29:11,Ryan,Gannon,7,Single,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:29:29,Austin,Celiberti,0,Double,0,2025-12-20,Unknown Opponent,1.0,Top
+2025-12-20T11:29:51,Ryan,Cole,14,Home Run,0,2025-12-20,Unknown Opponent,1.0,Top

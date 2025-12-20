@@ -41,30 +41,34 @@ def load_roster() -> pd.DataFrame:
     return df
 
 
+def empty_stats_df() -> pd.DataFrame:
+    return pd.DataFrame(
+        columns=[
+            "first_name",
+            "last_name",
+            "jersey_number",
+            "PA",
+            "AB",
+            "H",
+            "1B",
+            "2B",
+            "3B",
+            "HR",
+            "BB",
+            "K",
+            "RBI",
+            "AVG",
+            "OBP",
+            "SLG",
+        ]
+    )
+
+
 def load_player_stats() -> pd.DataFrame:
     if PLAYER_STATS_PATH.exists():
         df = pd.read_csv(PLAYER_STATS_PATH)
     else:
-        df = pd.DataFrame(
-            columns=[
-                "first_name",
-                "last_name",
-                "jersey_number",
-                "PA",
-                "AB",
-                "H",
-                "1B",
-                "2B",
-                "3B",
-                "HR",
-                "BB",
-                "K",
-                "RBI",
-                "AVG",
-                "OBP",
-                "SLG",
-            ]
-        )
+        df = empty_stats_df()
     return df
 
 
@@ -262,6 +266,81 @@ def merge_game_stats_into_2025():
     df.to_csv(STATS_2025_PATH, index=False)
 
 
+# ---------- Base helpers ----------
+def empty_bases():
+    return {"1B": None, "2B": None, "3B": None}
+
+
+def render_basepaths(bases: dict):
+    """Visual diamond showing where runners are."""
+
+    def box(label, runner):
+        # runner is either a string (player name) or None
+        occupied = runner is not None
+        text = runner if occupied else label
+        bg = "#2e7d32" if occupied else "#424242"
+        return f"""
+        <div style="
+            border: 2px solid white;
+            border-radius: 6px;
+            padding: 6px;
+            text-align:center;
+            font-size:0.9rem;
+            background:{bg};
+            min-height:42px;
+        ">{text}</div>
+        """
+
+    col_top = st.columns(3)
+    col_mid = st.columns(3)
+    col_bot = st.columns(3)
+
+    # 2B
+    col_top[1].markdown(box("2B", bases.get("2B")), unsafe_allow_html=True)
+    # 3B / 1B
+    col_mid[0].markdown(box("3B", bases.get("3B")), unsafe_allow_html=True)
+    col_mid[2].markdown(box("1B", bases.get("1B")), unsafe_allow_html=True)
+    # Home (no runner tracked here, batter is separate)
+    col_bot[1].markdown(
+        '<div style="text-align:center; margin-top:4px;">Home</div>',
+        unsafe_allow_html=True,
+    )
+
+# ---------- Stats recomputation for UNDO ----------
+def recompute_stats_from_log():
+    if not GAME_LOG_PATH.exists():
+        save_player_stats(empty_stats_df())
+        return
+
+    log_df = pd.read_csv(GAME_LOG_PATH)
+    stats_df = empty_stats_df()
+    for _, row in log_df.iterrows():
+        stats_df = update_player_stats(
+            stats_df,
+            row["first_name"],
+            row["last_name"],
+            int(row["jersey_number"]),
+            row["outcome"],
+            int(row.get("rbis", 0)),
+        )
+    save_player_stats(stats_df)
+
+
+def recompute_game_stats_for_current_game():
+    """Rebuild per-game aggregates for the current game from the log."""
+    st.session_state.game_stats = {}
+    if not GAME_LOG_PATH.exists():
+        return
+
+    log_df = pd.read_csv(GAME_LOG_PATH)
+    sub = log_df[
+        (log_df["game_date"] == st.session_state.game_date)
+        & (log_df["opponent"] == st.session_state.opponent)
+    ]
+    for _, row in sub.iterrows():
+        record_game_stat(row["first_name"], row["last_name"], row["outcome"])
+
+
 # ---------- Streamlit setup ----------
 st.set_page_config(
     page_title="Gameday",
@@ -289,13 +368,54 @@ def init_game_state():
     st.session_state.current_opp_runs = 0
 
     st.session_state.game_stats = {}        # per-game hitting for 2025 CSV
+    st.session_state.bases = empty_bases()
+    st.session_state.lineup = []            # ordered list of display_names
+    st.session_state.batter_index = 0
+    st.session_state.last_play = ""
+    st.session_state.undo_stack = []        # for rollback
 
 
 if "game_active" not in st.session_state:
     init_game_state()
 
 
-# ---------- Start new game UI ----------
+def push_snapshot():
+    """Save current game state so we can undo the last action."""
+    snap = {
+        "inning": st.session_state.inning,
+        "half": st.session_state.half,
+        "offense": st.session_state.offense,
+        "outs": st.session_state.outs,
+        "ltp_role": st.session_state.ltp_role,
+        "ltp_scores": st.session_state.ltp_scores.copy(),
+        "opp_scores": st.session_state.opp_scores.copy(),
+        "current_ltp_runs": st.session_state.current_ltp_runs,
+        "current_opp_runs": st.session_state.current_opp_runs,
+        "bases": st.session_state.bases.copy(),
+        "lineup": st.session_state.lineup.copy(),
+        "batter_index": st.session_state.batter_index,
+        "last_play": st.session_state.last_play,
+    }
+    st.session_state.undo_stack.append(snap)
+
+
+def apply_snapshot(snap: dict):
+    st.session_state.inning = snap["inning"]
+    st.session_state.half = snap["half"]
+    st.session_state.offense = snap["offense"]
+    st.session_state.outs = snap["outs"]
+    st.session_state.ltp_role = snap["ltp_role"]
+    st.session_state.ltp_scores = snap["ltp_scores"]
+    st.session_state.opp_scores = snap["opp_scores"]
+    st.session_state.current_ltp_runs = snap["current_ltp_runs"]
+    st.session_state.current_opp_runs = snap["current_opp_runs"]
+    st.session_state.bases = snap["bases"]
+    st.session_state.lineup = snap["lineup"]
+    st.session_state.batter_index = snap["batter_index"]
+    st.session_state.last_play = snap["last_play"]
+
+
+# ---------- Start new game + lineup UI ----------
 roster = load_roster()
 if roster.empty:
     st.error("Roster is empty. Go to 'Add / Remove Players' to add players first.")
@@ -319,6 +439,25 @@ with st.expander("Start / Reset Game", expanded=not st.session_state.game_active
         index=0 if st.session_state.get("ltp_role", "Home") == "Home" else 1,
     )
 
+    st.markdown("### Set Lineup (Batting Order)")
+    max_spots = min(15, len(roster))
+    num_spots = st.number_input(
+        "Number of spots in batting order",
+        min_value=1,
+        max_value=max_spots,
+        step=1,
+        value=min(max_spots, 10),
+        key="num_spots",
+    )
+
+    lineup_options = ["-- None --"] + roster["display_name"].tolist()
+    for i in range(num_spots):
+        st.selectbox(
+            f"Spot {i + 1}",
+            options=lineup_options,
+            key=f"lineup_{i}",
+        )
+
     col_a, col_b = st.columns(2)
     with col_a:
         if st.button("Start New Game"):
@@ -327,6 +466,20 @@ with st.expander("Start / Reset Game", expanded=not st.session_state.game_active
             st.session_state.game_date = str(game_date)
             st.session_state.opponent = opponent or "Unknown Opponent"
             st.session_state.ltp_role = ltp_role
+
+            # Build lineup from selected spots
+            selected = []
+            for i in range(num_spots):
+                val = st.session_state.get(f"lineup_{i}")
+                if val and val != "-- None --" and val not in selected:
+                    selected.append(val)
+
+            if not selected:
+                selected = roster["display_name"].tolist()
+
+            st.session_state.lineup = selected
+            st.session_state.batter_index = 0
+            st.session_state.undo_stack = []
 
             # Set who bats first based on Home/Away
             st.session_state.inning = 1
@@ -338,7 +491,7 @@ with st.expander("Start / Reset Game", expanded=not st.session_state.game_active
 
             st.success(
                 f"Game started vs {st.session_state.opponent} on {st.session_state.game_date}. "
-                f"LTP is {ltp_role} team."
+                f"LTP is {ltp_role} team. Lineup set with {len(selected)} hitters."
             )
             st.rerun()
     with col_b:
@@ -348,6 +501,12 @@ with st.expander("Start / Reset Game", expanded=not st.session_state.game_active
 
 if not st.session_state.game_active:
     st.stop()
+
+# Ensure we always have a lineup
+if not st.session_state.lineup:
+    st.session_state.lineup = roster["display_name"].tolist()
+    st.session_state.batter_index = 0
+
 
 # ---------- Scoreboard ----------
 st.markdown("---")
@@ -396,6 +555,26 @@ st.write(f"**Total Score:** LTP {total_ltp} — {total_opp} {st.session_state.op
 if st.session_state.inning > 6:
     st.caption("Regulation 6 innings complete. Extra innings in progress.")
 
+# ---------- Undo button ----------
+if st.session_state.undo_stack:
+    if st.button("↩️ Undo Last Play"):
+        # 1) Remove last log row (if any)
+        if GAME_LOG_PATH.exists():
+            log_df = pd.read_csv(GAME_LOG_PATH)
+            if len(log_df) > 0:
+                log_df = log_df.iloc[:-1]
+                log_df.to_csv(GAME_LOG_PATH, index=False)
+
+        # 2) Recompute stats & game_stats from log
+        recompute_stats_from_log()
+        recompute_game_stats_for_current_game()
+
+        # 3) Restore previous state snapshot
+        snap = st.session_state.undo_stack.pop()
+        apply_snapshot(snap)
+
+        st.info("Last play undone.")
+        st.rerun()
 
 # ---------- Current half-inning status ----------
 st.markdown("---")
@@ -406,15 +585,35 @@ offense_label = (
 st.subheader(f"Inning {st.session_state.inning} — {half_label} ({offense_label})")
 st.write(f"**Outs:** {st.session_state.outs} / 3")
 
+# Show current bases (for LTP offense) + viz
+if st.session_state.offense == "LTP":
+    st.markdown("#### Base Runners")
+    render_basepaths(st.session_state.bases)
+
+# Last play summary
+if st.session_state.last_play:
+    st.caption(f"Last play: {st.session_state.last_play}")
+
 
 # ---------- LTP batting flow ----------
 if st.session_state.offense == "LTP":
-    st.markdown("### Enter Plate Appearance")
+    st.markdown("### Current Batter")
 
-    batter = st.selectbox("Select Batter", roster["display_name"].tolist())
+    lineup = st.session_state.lineup
+    idx = st.session_state.batter_index % len(lineup)
+    current_batter_name = lineup[idx]
+    st.write(f"**Batter up:** {current_batter_name}")
 
+    # Find roster row for current batter
+    batter_row = roster[roster["display_name"] == current_batter_name]
+    if batter_row.empty:
+        st.error("Current batter not found in roster. Check lineup setup.")
+        st.stop()
+    batter_info = batter_row.iloc[0]
+
+    # Outcome is for stat classification only
     outcome = st.selectbox(
-        "Result",
+        "Result (for stats)",
         [
             "Single",
             "Double",
@@ -428,19 +627,104 @@ if st.session_state.offense == "LTP":
         ],
     )
 
-    rbis = st.number_input(
-        "RBIs on this PA",
+    st.markdown("### Runners & Scoring")
+
+    # How many runs scored on this play (manual)
+    runs_scored = st.number_input(
+        "Total runs scored on this play",
         min_value=0,
         max_value=4,
         step=1,
         value=0,
+        key="runs_scored_input",
+    )
+
+    bases_before = st.session_state.bases
+    runner_moves = {}
+
+    # Manual movement for existing runners, start with lead runner (3B -> 2B -> 1B)
+    move_options_template = {
+        "3B": [
+            "Stays at 3B",
+            "Scores",
+            "Out",
+            "On 1B",
+            "On 2B",
+        ],
+        "2B": [
+            "Stays at 2B",
+            "Scores",
+            "Out",
+            "On 1B",
+            "On 3B",
+        ],
+        "1B": [
+            "Stays at 1B",
+            "Scores",
+            "Out",
+            "On 2B",
+            "On 3B",
+        ],
+    }
+
+    for base in ["3B", "2B", "1B"]:
+        runner = bases_before.get(base)
+        if runner:
+            opts = move_options_template[base]
+            choice = st.selectbox(
+                f"Runner {runner} (was on {base}) ends up:",
+                options=opts,
+                key=f"move_{base}",
+            )
+            runner_moves[(base, runner)] = choice
+
+    # Batter destination
+    batter_dest = st.selectbox(
+        f"Batter {current_batter_name} ends up:",
+        options=["Out", "Scores", "On 1B", "On 2B", "On 3B"],
+        key="batter_dest",
     )
 
     if st.button("Submit Plate Appearance"):
-        sel = roster[roster["display_name"] == batter].iloc[0]
-        first = sel["first_name"]
-        last = sel["last_name"]
-        jersey = int(sel["jersey_number"])
+        # Save snapshot for UNDO
+        push_snapshot()
+
+        first = batter_info["first_name"]
+        last = batter_info["last_name"]
+        jersey = int(batter_info["jersey_number"])
+        display_name = current_batter_name
+
+        # --- Apply manual base moves ---
+        new_bases = empty_bases()
+
+        # Existing runners
+        outs_added = 0
+        for (start_base, runner), choice in runner_moves.items():
+            if choice.startswith("Stays at"):
+                new_bases[start_base] = runner
+            elif choice == "Scores":
+                pass  # scoring handled via runs_scored input
+            elif choice == "Out":
+                outs_added += 1
+            elif choice.startswith("On "):
+                dest_base = choice.split(" ")[1]
+                new_bases[dest_base] = runner
+
+        # Batter destination
+        if batter_dest == "Out":
+            outs_added += 1
+        elif batter_dest == "Scores":
+            pass
+        elif batter_dest.startswith("On "):
+            dest_base = batter_dest.split(" ")[1]
+            new_bases[dest_base] = display_name
+
+        # Update outs & runs from manual choices
+        st.session_state.outs += outs_added
+        if st.session_state.outs > 3:
+            st.session_state.outs = 3
+
+        st.session_state.current_ltp_runs += int(runs_scored)
 
         # Log event
         event = {
@@ -453,34 +737,31 @@ if st.session_state.offense == "LTP":
             "last_name": last,
             "jersey_number": jersey,
             "outcome": outcome,
-            "rbis": int(rbis),
+            "rbis": int(runs_scored),
         }
         append_game_log(event)
 
         # Update live stats
         stats = load_player_stats()
         stats = update_player_stats(
-            stats, first, last, jersey, outcome, int(rbis)
+            stats, first, last, jersey, outcome, int(runs_scored)
         )
         save_player_stats(stats)
 
         # Record per-game stats for 2025 CSV (Option A)
         record_game_stat(first, last, outcome)
 
-        # Update runs + outs in game state
-        st.session_state.current_ltp_runs += int(rbis)
+        # Save updated bases & play summary
+        st.session_state.bases = new_bases
+        st.session_state.last_play = (
+            f"{outcome} by {display_name}, {runs_scored} run(s) scored, "
+            f"{outs_added} out(s) on the play."
+        )
 
-        # Outs: regular, double play, triple play
-        if outcome in ["Out", "Strikeout"]:
-            st.session_state.outs += 1
-        elif outcome == "Double Play":
-            st.session_state.outs += 2
-        elif outcome == "Triple Play":
-            st.session_state.outs += 3
-
-        # Cap outs at 3
-        if st.session_state.outs > 3:
-            st.session_state.outs = 3
+        # Advance lineup
+        st.session_state.batter_index = (st.session_state.batter_index + 1) % len(
+            st.session_state.lineup
+        )
 
         # Check end of half-inning
         if st.session_state.outs >= 3:
@@ -494,9 +775,13 @@ if st.session_state.offense == "LTP":
             st.session_state.current_ltp_runs = 0
             st.session_state.outs = 0
 
+            # Clear bases
+            st.session_state.bases = empty_bases()
+
             # Switch to opponent half
             st.session_state.offense = "Opponent"
             st.session_state.half = "Bottom" if st.session_state.half == "Top" else "Top"
+            st.session_state.last_play += " (End of half-inning.)"
 
         st.rerun()
 
@@ -523,8 +808,10 @@ else:
     )
 
     if st.button("Submit Opponent Half"):
+        # Save snapshot for UNDO
+        push_snapshot()
+
         st.session_state.current_opp_runs = int(runs_this_half)
-        # We don't track individual opponent PAs, just runs & outs
 
         prev = st.session_state.opp_scores.get(st.session_state.inning, 0)
         st.session_state.opp_scores[st.session_state.inning] = (
@@ -532,11 +819,14 @@ else:
         )
         st.session_state.current_opp_runs = 0
 
-        # End of inning when opponent half finishes
         st.session_state.outs = 0
         st.session_state.inning += 1
         st.session_state.half = "Top"
         st.session_state.offense = "LTP"
+        st.session_state.bases = empty_bases()
+        st.session_state.last_play = (
+            f"{st.session_state.opponent} scored {runs_this_half} run(s) in the half."
+        )
 
         st.rerun()
 

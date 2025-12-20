@@ -1,3 +1,7 @@
 first_name,last_name,jersey_number,PA,AB,H,1B,2B,3B,HR,BB,K,RBI,AVG,OBP,SLG
-John,Gannon,0,3,3,0,0,0,0,0,0,3,0,0.0,0.0,0.0
-Austin,Celiberti,0,1,1,1,1,0,0,0,0,0,0,1.0,1.0,1.0
+John,Gannon,0,6,6,3,2,0,0,1,0,3,3,0.5,0.5,1.0
+Austin,Celiberti,0,5,5,5,2,3,0,0,0,0,0,1.0,1.0,1.6
+Ryan,Gannon,7,3,3,3,3,0,0,0,0,0,0,1.0,1.0,1.0
+Robert,Smith,7,2,1,1,0,1,0,0,1,0,2,1.0,1.0,2.0
+Zac,Lavigna,18,1,1,0,0,0,0,0,0,0,0,0.0,0.0,0.0
+Ryan,Cole,14,2,2,1,0,0,0,1,0,0,0,0.5,0.5,2.0
