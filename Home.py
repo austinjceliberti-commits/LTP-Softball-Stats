@@ -1,47 +1,85 @@
 import streamlit as st
 
+# -------- Page config --------
 st.set_page_config(
-    page_title="LTP Home",
+    page_title="LTP Home For 2025",
     page_icon="",
     layout="wide",
 )
 
-st.title("LTP Home")
+# -------- HERO SECTION --------
+col_hero, col_side = st.columns([2, 1])
 
-st.write(
-    "Welcome to the LTP Softball Stats dashboard (counting Robert's strikeouts). "
-    "Use the bar on the side better, links dont work for shit:"
-)
+with col_hero:
+    st.markdown(
+        "<h1 style='margin-bottom:0;'>LTP Home</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<h4 style='color:#888;margin-top:0;'>Beer league softball stats & odds dashboard</h4>",
+        unsafe_allow_html=True,
+    )
 
-st.markdown(
-    """
-- **Add / Remove Players** – manage the roster stored in `players.csv`
-- **Gameday** – log plate appearances live during games
-- **Odds Maker** – view outcome probabilities and betting odds
-"""
-)
+    st.markdown(
+        """
+        The LTP Softball Stats dashboard and game log (Counting Bob's strikeouts).
+
+        Use the sidebar to jump into each page:
+        """
+    )
+
+    st.markdown(
+        """
+        - **Add / Remove Players** – manage the roster .
+        - **Gameday** – log plate appearances live and update stats.
+        - **Odds Maker** – view Player stats and odds.
+        - **Season History** – see final scores, record, and per-game box scores.
+        """
+    )
+
+with col_side:
+    # Main hero image
+    st.image("Beer_League.jpeg", caption="Connor at the dish", use_container_width=True)
 
 st.markdown("---")
 
-col1, col2, col3 = st.columns(3)
+# -------- FEATURE CARDS + SECOND IMAGE --------
+top_col, img_col = st.columns([2, 1])
 
-with col1:
-    st.subheader("Add / Remove Players")
-    st.write(
-        "Manage roster: add new players, remove players, and update basic info.\n\n"
-        "_Sidebar page: `Add / Remove Players`_"
-    )
+with top_col:
+    c1, c2 = st.columns(2)
+    c3, c4 = st.columns(2)
 
-with col2:
-    st.subheader("Gameday")
-    st.write(
-        "Use this during games to record plate appearances and update live stats.\n\n"
-        "_Sidebar page: `Gameday`_"
-    )
+    with c1:
+        st.markdown("### Add / Remove Players")
+        st.write(
+            "Manage the roster: add new players, remove players, and update jersey numbers & emails."
+        )
+        st.caption("Sidebar page: *edit players*")
 
-with col3:
-    st.subheader("Odds Maker")
-    st.write(
-        "Generate outcome probabilities and American odds from combined 2024 and 2025 stats For whatever stats Matt put in.\n\n"
-        "_Sidebar page: `Odds Maker`_"
-    )
+    with c2:
+        st.markdown("### Gameday")
+        st.write(
+            "Live scorebook: record every plate appearance, track base-runners, and update the scoreboard."
+        )
+        st.caption("Sidebar page: *gameday*")
+
+    with c3:
+        st.markdown("### Player Stats and Odds")
+        st.write(
+            "Track everyones stats live through the season, odds based of whatever stats I have from last year."
+        )
+        st.caption("Sidebar page: *odds maker*")
+
+    with c4:
+        st.markdown("### Season History")
+        st.write(
+            "View final scores, team record, run differential, and per-game hitting box scores."
+        )
+        st.caption("Sidebar page: *season history*")
+
+with img_col:
+    st.image("kellys.jpeg", caption="Postgame", use_container_width=True)
+
+st.markdown("---")
+st.caption("Tip: use the left sidebar to navigate between pages.")

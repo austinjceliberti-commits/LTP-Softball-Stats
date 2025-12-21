@@ -163,7 +163,26 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("Pobability and Outcome Betting Odds ")
+
+
+col_title, col_img = st.columns([3, 1])
+
+with col_title:
+    st.markdown(
+        "<h1 style='margin-bottom:0;'>Player Stats & Odds</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='color:#666;margin-top:4px;'>Outcome probabilities, betting lines, and advanced analytics</p>",
+        unsafe_allow_html=True,
+    )
+
+with col_img:
+    st.image(
+        "softball_3.jpeg",   # or "Moneyball.png" / whatever image you want
+        caption="Jonah Hill says take your base",
+        width=220,
+    )
 
 roster = load_roster()
 if roster.empty:

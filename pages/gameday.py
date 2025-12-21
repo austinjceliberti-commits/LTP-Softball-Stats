@@ -340,7 +340,28 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("Gameday: Enter Plate Appearance Entry")
+
+# ---- HERO HEADER FOR GAMEDAY ----
+
+# Create a clean two-column layout for title + small image
+col_title, col_img = st.columns([3, 1])
+
+with col_title:
+    st.markdown(
+        "<h1 style='margin-bottom:0px;'>Gameday: Enter Plate Appearance Entry</h1>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<p style='color:#666;margin-top:4px;'>Live scorebook, basepaths, and inning tracker</p>",
+        unsafe_allow_html=True,
+    )
+
+with col_img:
+    st.image(
+        "Gameday.png",
+        caption="",
+        width=220,      # ⭐️ ideal size
+    )
 
 
 # ---------- Initialize session_state for game flow ----------
