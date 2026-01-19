@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 from datetime import datetime, date
+import auth
+auth.require_login()
+
 
 # ---------- File paths ----------
 ROSTER_PATH = Path("players.csv")

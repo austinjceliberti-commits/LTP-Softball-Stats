@@ -1,10 +1,14 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import auth
+auth.require_login()
+
 
 SEASON_HISTORY_PATH = Path("season_history.csv")
 GAME_LOG_PATH = Path("gameday_log.csv")
 PLAYER_STATS_PATH = Path("player_stats.csv")
+
 
 # --------- helpers for box score + stat rebuild (copied from gameday) ----------
 def empty_stats_df() -> pd.DataFrame:

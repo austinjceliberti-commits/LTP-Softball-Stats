@@ -1,4 +1,7 @@
 import streamlit as st
+import auth
+auth.require_login()
+
 
 # -------- Page config --------
 st.set_page_config(

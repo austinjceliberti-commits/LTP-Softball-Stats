@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import auth
+auth.require_login()
+
 
 # Historical stats files
 CSV_SP24 = Path("ltp_SP24 Updated(in)(in).csv")   # 2024 / Spring

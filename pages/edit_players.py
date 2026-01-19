@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import auth
+auth.require_login()
+
 
 # Single source of truth for roster
 DATA_PATH = Path("players.csv")

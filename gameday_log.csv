@@ -19,34 +19,3 @@ timestamp,first_name,last_name,jersey_number,outcome,rbis,game_date,opponent,inn
 2025-12-20T11:29:11,Ryan,Gannon,7,Single,0,2025-12-20,Unknown Opponent,1.0,Top
 2025-12-20T11:29:29,Austin,Celiberti,0,Double,0,2025-12-20,Unknown Opponent,1.0,Top
 2025-12-20T11:29:51,Ryan,Cole,14,Home Run,0,2025-12-20,Unknown Opponent,1.0,Top
-2025-12-20T13:47:23,Austin,Celiberti,0,Single,0,2025-12-20,Playa Bowls ,1.0,Top
-2025-12-20T13:47:25,John,Gannon,0,Single,0,2025-12-20,Playa Bowls ,1.0,Top
-2025-12-20T13:47:49,Ryan,Gannon,7,Double,0,2025-12-20,Playa Bowls ,1.0,Top
-2025-12-20T13:48:12,Ryan,Cole,14,Home Run,2,2025-12-20,Playa Bowls ,1.0,Top
-2025-12-20T13:48:26,Zac,Lavigna,18,Out,0,2025-12-20,Playa Bowls ,1.0,Top
-2025-12-20T13:48:37,Dylan,Taliffero,18,Single,0,2025-12-20,Playa Bowls ,2.0,Top
-2025-12-20T13:48:47,Evan,Pollack,75,Double,0,2025-12-20,Playa Bowls ,2.0,Top
-2025-12-20T13:49:14,Robert,Smith,7,Home Run,3,2025-12-20,Playa Bowls ,2.0,Top
-2025-12-20T13:49:24,Austin,Celiberti,0,Out,0,2025-12-20,Playa Bowls ,2.0,Top
-2025-12-20T13:49:26,John,Gannon,0,Out,0,2025-12-20,Playa Bowls ,2.0,Top
-2025-12-20T13:49:27,Ryan,Gannon,7,Out,0,2025-12-20,Playa Bowls ,2.0,Top
-2025-12-20T13:49:40,Ryan,Cole,14,Single,0,2025-12-20,Playa Bowls ,3.0,Top
-2025-12-20T13:49:45,Zac,Lavigna,18,Single,0,2025-12-20,Playa Bowls ,3.0,Top
-2025-12-20T13:50:22,Dylan,Taliffero,18,Double,2,2025-12-20,Playa Bowls ,3.0,Top
-2025-12-20T13:50:38,Evan,Pollack,75,Strikeout,0,2025-12-20,Playa Bowls ,3.0,Top
-2025-12-20T13:50:39,Robert,Smith,7,Strikeout,0,2025-12-20,Playa Bowls ,3.0,Top
-2025-12-20T13:50:48,Austin,Celiberti,0,Strikeout,0,2025-12-20,Playa Bowls ,3.0,Top
-2025-12-20T13:50:58,John,Gannon,0,Single,0,2025-12-20,Playa Bowls ,4.0,Top
-2025-12-20T13:51:14,Ryan,Gannon,7,Single,0,2025-12-20,Playa Bowls ,4.0,Top
-2025-12-20T13:51:33,Ryan,Cole,14,Home Run,3,2025-12-20,Playa Bowls ,4.0,Top
-2025-12-20T13:51:47,Zac,Lavigna,18,Strikeout,0,2025-12-20,Playa Bowls ,4.0,Top
-2025-12-20T13:51:48,Dylan,Taliffero,18,Strikeout,0,2025-12-20,Playa Bowls ,4.0,Top
-2025-12-20T13:51:49,Evan,Pollack,75,Strikeout,0,2025-12-20,Playa Bowls ,4.0,Top
-2025-12-20T13:52:11,Robert,Smith,7,Out,0,2025-12-20,Playa Bowls ,5.0,Top
-2025-12-20T13:52:11,Austin,Celiberti,0,Out,0,2025-12-20,Playa Bowls ,5.0,Top
-2025-12-20T13:52:12,John,Gannon,0,Out,0,2025-12-20,Playa Bowls ,5.0,Top
-2025-12-20T13:52:49,Ryan,Gannon,7,Single,0,2025-12-20,Playa Bowls ,6.0,Top
-2025-12-20T13:53:06,Ryan,Cole,14,Double,1,2025-12-20,Playa Bowls ,6.0,Top
-2025-12-20T13:53:15,Zac,Lavigna,18,Out,0,2025-12-20,Playa Bowls ,6.0,Top
-2025-12-20T13:53:16,Dylan,Taliffero,18,Out,0,2025-12-20,Playa Bowls ,6.0,Top
-2025-12-20T13:53:17,Evan,Pollack,75,Out,0,2025-12-20,Playa Bowls ,6.0,Top
