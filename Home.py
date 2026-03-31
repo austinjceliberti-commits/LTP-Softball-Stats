@@ -35,7 +35,7 @@ with col_hero:
         """
         - **Add / Remove Players** – manage the roster .
         - **Gameday** – log plate appearances live and update stats.
-        - **Odds Maker** – view Player stats and odds.
+        - **LTP Stats** – view Player stats and odds.
         - **Season History** – see final scores, record, and per-game box scores.
         """
     )
