@@ -19,30 +19,30 @@ with col_hero:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<h4 style='color:#888;margin-top:0;'>Beer league softball stats & odds dashboard</h4>",
+        "<h4 style='color:#888;margin-top:0;'>Beer league softball lineup, gameday, and season stats dashboard</h4>",
         unsafe_allow_html=True,
     )
 
     st.markdown(
         """
-        The LTP Softball Stats dashboard and game log (Counting Bob's strikeouts).
+        The LTP Softball app tracks lineup management, gameday box scores, and season stats.
 
-        Use the sidebar to jump into each page:
+        Use the sidebar in this order:
         """
     )
 
     st.markdown(
         """
-        - **Add / Remove Players** – manage the roster .
-        - **Gameday** – log plate appearances live and update stats.
-        - **LTP Stats** – view Player stats and odds.
-        - **Season History** – see final scores, record, and per-game box scores.
+        - **Add / Remove Players** – captain edits/adds/removes lineup players.
+        - **Gameday** – record live box score and plate appearances.
+        - **Season History** – stores each completed game and box score.
+        - **LTP Stats** – shows season-to-date basic baseball stats.
         """
     )
 
 with col_side:
     # Main hero image
-    st.image("Beer_League.jpeg", caption="Connor at the dish", use_container_width=True)
+    st.image("softball_3.jpeg", caption="Team photo", use_container_width=True)
 
 st.markdown("---")
 
@@ -68,11 +68,11 @@ with top_col:
         st.caption("Sidebar page: *gameday*")
 
     with c3:
-        st.markdown("### Player Stats and Odds")
+        st.markdown("### Basic Stats")
         st.write(
-            "Track everyones stats live through the season, odds based of whatever stats I have from last year."
+            "Season-to-date baseball stats generated from completed games and box scores."
         )
-        st.caption("Sidebar page: *odds maker*")
+        st.caption("Sidebar page: *odds maker* (Basic Stats)")
 
     with c4:
         st.markdown("### Season History")

@@ -11,50 +11,96 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title(" Team LTP Stats")
-st.caption("Filter player stats by season year")
+st.title("LTP Basic Stats")
+st.caption("Season-to-date team and player batting stats")
 
 LOG_PATH = Path("gameday_log.csv")
+SEASON_HISTORY_PATH = Path("season_history.csv")
 
-if not LOG_PATH.exists():
-    st.error("gameday_log.csv was not found in the project folder.")
-    st.stop()
 
 @st.cache_data
-def load_log():
-    df = pd.read_csv(LOG_PATH)
-
-    if df.empty:
-        return df
-
-    # Clean dates
-    df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce")
-    df = df.dropna(subset=["game_date"]).copy()
-    df["year"] = df["game_date"].dt.year
-
-    # Clean text columns
-    df["first_name"] = df["first_name"].fillna("").astype(str).str.strip()
-    df["last_name"] = df["last_name"].fillna("").astype(str).str.strip()
-    df["player_name"] = (df["first_name"] + " " + df["last_name"]).str.strip()
-
-    df["outcome"] = df["outcome"].fillna("").astype(str).str.strip()
-    df["rbis"] = pd.to_numeric(df["rbis"], errors="coerce").fillna(0).astype(int)
-
-    return df
-
-def build_stats(df):
-    if df.empty:
+def load_current_season_log() -> pd.DataFrame:
+    """Only include plate appearances tied to games in season history."""
+    if not LOG_PATH.exists():
         return pd.DataFrame()
 
-    hit_map = {
-        "Single": "1B",
-        "Double": "2B",
-        "Triple": "3B",
-        "Home Run": "HR",
-    }
+    log_df = pd.read_csv(LOG_PATH)
+    if log_df.empty:
+        return pd.DataFrame()
 
-    strikeout_events = {"Strikeout", "Strikeout Looking"}
+    required_log_cols = {
+        "game_date",
+        "opponent",
+        "first_name",
+        "last_name",
+        "jersey_number",
+        "outcome",
+        "rbis",
+    }
+    if not required_log_cols.issubset(set(log_df.columns)):
+        return pd.DataFrame()
+
+    if not SEASON_HISTORY_PATH.exists():
+        return pd.DataFrame()
+
+    hist_df = pd.read_csv(SEASON_HISTORY_PATH)
+    if hist_df.empty or not {"date", "opponent"}.issubset(hist_df.columns):
+        return pd.DataFrame()
+
+    log_df["game_date"] = pd.to_datetime(log_df["game_date"], errors="coerce").dt.strftime("%Y-%m-%d")
+    hist_df["date"] = pd.to_datetime(hist_df["date"], errors="coerce").dt.strftime("%Y-%m-%d")
+
+    log_df["opponent"] = log_df["opponent"].fillna("").astype(str).str.strip()
+    hist_df["opponent"] = hist_df["opponent"].fillna("").astype(str).str.strip()
+
+    valid_games = hist_df[["date", "opponent"]].dropna().drop_duplicates()
+    merged = log_df.merge(
+        valid_games,
+        left_on=["game_date", "opponent"],
+        right_on=["date", "opponent"],
+        how="inner",
+    )
+
+    if merged.empty:
+        return pd.DataFrame()
+
+    merged["first_name"] = merged["first_name"].fillna("").astype(str).str.strip()
+    merged["last_name"] = merged["last_name"].fillna("").astype(str).str.strip()
+    merged["player_name"] = (merged["first_name"] + " " + merged["last_name"]).str.strip()
+    merged["outcome"] = merged["outcome"].fillna("").astype(str).str.strip()
+    merged["rbis"] = pd.to_numeric(merged["rbis"], errors="coerce").fillna(0).astype(int)
+    merged["jersey_number"] = pd.to_numeric(merged["jersey_number"], errors="coerce").fillna(0).astype(int)
+
+    return merged
+
+
+def build_stats(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame(
+            columns=[
+                "Player",
+                "Jersey",
+                "G",
+                "PA",
+                "AB",
+                "R",
+                "H",
+                "1B",
+                "2B",
+                "3B",
+                "HR",
+                "RBI",
+                "BB",
+                "K",
+                "AVG",
+                "OBP",
+                "SLG",
+                "OPS",
+            ]
+        )
+
     walk_events = {"Walk"}
+    strikeout_events = {"Strikeout", "Strikeout Looking"}
 
     rows = []
 
@@ -63,141 +109,87 @@ def build_stats(df):
 
         singles = (outcomes == "Single").sum()
         doubles = (outcomes == "Double").sum()
-        triples = (outcomes == "Triple").sum() if "Triple" in outcomes.values else 0
+        triples = (outcomes == "Triple").sum()
         homers = (outcomes == "Home Run").sum()
-
         hits = singles + doubles + triples + homers
+
         walks = outcomes.isin(walk_events).sum()
         strikeouts = outcomes.isin(strikeout_events).sum()
 
-        # Everything except walks counts as an AB here
-        ab = len(group) - walks
         pa = len(group)
+        ab = pa - walks
+        games = group[["game_date", "opponent"]].drop_duplicates().shape[0]
 
         avg = hits / ab if ab > 0 else 0
         obp = (hits + walks) / pa if pa > 0 else 0
         total_bases = singles + (2 * doubles) + (3 * triples) + (4 * homers)
         slg = total_bases / ab if ab > 0 else 0
+        ops = obp + slg
 
-        jersey = group["jersey_number"].dropna()
-        jersey_number = int(jersey.iloc[0]) if not jersey.empty else ""
+        jersey_number = int(group["jersey_number"].iloc[0])
 
         rows.append(
             {
                 "Player": player,
                 "Jersey": jersey_number,
+                "G": games,
                 "PA": pa,
                 "AB": ab,
+                "R": 0,
                 "H": hits,
                 "1B": singles,
                 "2B": doubles,
                 "3B": triples,
                 "HR": homers,
+                "RBI": int(group["rbis"].sum()),
                 "BB": walks,
                 "K": strikeouts,
-                "RBI": int(group["rbis"].sum()),
                 "AVG": round(avg, 3),
                 "OBP": round(obp, 3),
                 "SLG": round(slg, 3),
+                "OPS": round(ops, 3),
             }
         )
 
-    stats_df = pd.DataFrame(rows).sort_values(
-        by=["AVG", "OBP", "SLG", "H"],
-        ascending=False
+    return pd.DataFrame(rows).sort_values(
+        by=["OPS", "AVG", "H"],
+        ascending=False,
     ).reset_index(drop=True)
 
-    return stats_df
 
-log_df = load_log()
+log_df = load_current_season_log()
+stats_df = build_stats(log_df)
 
-if log_df.empty:
-    st.warning("No gameday data found yet.")
-    st.stop()
+st.markdown("### Stats Pipeline")
+st.markdown(
+    """
+1. **Captain manages lineup** on the *Add / Remove Players* page.
+2. **Gameday box score is recorded** on the *Gameday* page.
+3. **Season History + Stats update** from those recorded game events.
+"""
+)
 
-years = sorted(log_df["year"].dropna().unique().tolist())
-year_options = ["All Years"] + years
+if stats_df.empty:
+    st.info("No season games recorded yet. Stats will populate after the first completed game.")
 
-selected_year = st.selectbox("Select year", year_options)
-
-filtered_df = log_df.copy()
-if selected_year != "All Years":
-    filtered_df = filtered_df[filtered_df["year"] == selected_year]
-
-stats_df = build_stats(filtered_df)
-
-top1, top2, top3, top4 = st.columns(4)
-
-with top1:
-    st.metric("Plate Appearances", len(filtered_df))
-
-with top2:
+metric1, metric2, metric3, metric4 = st.columns(4)
+with metric1:
+    st.metric("Games", int(log_df[["game_date", "opponent"]].drop_duplicates().shape[0]) if not log_df.empty else 0)
+with metric2:
+    st.metric("Plate Appearances", int(stats_df["PA"].sum()) if not stats_df.empty else 0)
+with metric3:
     st.metric("Hits", int(stats_df["H"].sum()) if not stats_df.empty else 0)
-
-with top3:
+with metric4:
     st.metric("Home Runs", int(stats_df["HR"].sum()) if not stats_df.empty else 0)
 
-with top4:
-    st.metric("RBIs", int(stats_df["RBI"].sum()) if not stats_df.empty else 0)
-
 st.markdown("---")
-
 search = st.text_input("Search player name").strip().lower()
 
 display_df = stats_df.copy()
-if search:
+if search and not display_df.empty:
     display_df = display_df[
         display_df["Player"].str.lower().str.contains(search, na=False)
     ]
 
-st.subheader("Player Stats")
-
-if display_df.empty:
-    st.info("No players found for that filter.")
-else:
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True
-    )
-
-st.markdown("---")
-
-st.subheader("Leaderboard")
-
-lead1, lead2, lead3 = st.columns(3)
-
-if not stats_df.empty:
-    qualified = stats_df[stats_df["PA"] >= 1].copy()
-
-    with lead1:
-        st.markdown("### Batting Average")
-        st.dataframe(
-            qualified[["Player", "AVG"]]
-            .sort_values("AVG", ascending=False)
-            .head(5),
-            use_container_width=True,
-            hide_index=True,
-        )
-
-    with lead2:
-        st.markdown("### Home Runs")
-        st.dataframe(
-            qualified[["Player", "HR"]]
-            .sort_values("HR", ascending=False)
-            .head(5),
-            use_container_width=True,
-            hide_index=True,
-        )
-
-    with lead3:
-        st.markdown("### RBIs")
-        st.dataframe(
-            qualified[["Player", "RBI"]]
-            .sort_values("RBI", ascending=False)
-            .head(5),
-            use_container_width=True,
-            hide_index=True,
-        )
-
-
+st.subheader("Player Batting Stats")
+st.dataframe(display_df, use_container_width=True, hide_index=True)
